@@ -1,0 +1,48 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f2f2f2;
+}
+
+h1 {
+    background: #333;
+    color: white;
+    padding: 15px;
+}
+
+.container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.left, .right {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 40%;
+    box-shadow: 0 0 10px gray;
+}
+
+input, button {
+    padding: 10px;
+    margin: 10px;
+    width: 80%;
+}
+
+#slots {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.slot {
+    padding: 20px;
+    background: green;
+    color: white;
+    border-radius: 8px;
+}
+
+.occupied {
+    background: red;
+}
