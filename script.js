@@ -31,17 +31,19 @@ function findFreeSlot() {
 
 // Park vehicle
 function parkVehicle() {
-    let vnum = document.getElementById('vehicleNumber').value.trim().toUpperCase();
+    let input = document.getElementById('vehicleNumber');
+    let vnum = input.value.trim().toUpperCase();
 
-    if (!vnum) {
-        showMessage("Please enter vehicle number!");
-        return;
+    // Strict Indian format: KA01AB1234
+    const regex = /^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/;
+
+    if (!regex.test(vnum)) {
+        showMessage("Invalid format! Use format: KA01AB1234");
+        input.style.border = "2px solid red";
+        return; // STOP execution
     }
 
-    if (!isValidVehicleNumber(vnum)) {
-        showMessage("Invalid format! Use: KA01AB1234");
-        return;
-    }
+    input.style.border = "2px solid green";
 
     if (vnum in parkingData) {
         showMessage("Vehicle already parked!");
@@ -64,8 +66,10 @@ function parkVehicle() {
     slotDiv.innerText = `Slot ${freeSlot}\n${vnum}`;
 
     showMessage(`Vehicle parked at Slot ${freeSlot}`);
-    document.getElementById('vehicleNumber').value = "";
+    input.value = "";
+    input.style.border = "";
 }
+
 
 // Exit vehicle
 function exitVehicle() {
