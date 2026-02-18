@@ -1,18 +1,23 @@
 const totalSlots = 10;
 const ratePerHour = 20;
-let parkingData = new Map(); // Better than object for key-based storage
 
-// Create parking slots dynamically
+let parkingData = new Map();  // vehicleNumber → {slot, entryTime}
+let freeSlotsQueue = [];      // Queue of free slots
+
+// Initialize slots
 function createSlots() {
-    const slotDiv = document.getElementById('slots');
-    slotDiv.innerHTML = ""; // Reset if called again
+    const slotContainer = document.getElementById('slots');
+    slotContainer.innerHTML = "";
+    freeSlotsQueue = [];
 
     for (let i = 1; i <= totalSlots; i++) {
-        let div = document.createElement('div');
-        div.className = 'slot';
-        div.id = 'slot' + i;
-        div.innerText = 'Slot ' + i;
-        slotDiv.appendChild(div);
+        const slotDiv = document.createElement('div');
+        slotDiv.className = 'slot';
+        slotDiv.id = 'slot' + i;
+        slotDiv.innerText = 'Slot ' + i;
+        slotContainer.appendChild(slotDiv);
+
+        freeSlotsQueue.push(i); // Add slot to queue
     }
 }
 
@@ -21,111 +26,90 @@ function normalizeVehicleNumber(vnum) {
     return vnum.trim().toUpperCase();
 }
 
-// Validate vehicle number
+// Basic validation
 function isValidVehicleNumber(vnum) {
-    return vnum.length >= 3; // Basic validation (can improve regex later)
+    return vnum.length >= 3;
 }
 
-// Find first free slot
-function findFreeSlot() {
-    let occupiedSlots = new Set(
-        Array.from(parkingData.values()).map(data => data.slot)
-    );
-
-    for (let i = 1; i <= totalSlots; i++) {
-        if (!occupiedSlots.has(i)) {
-            return i;
-        }
-    }
-    return null;
-}
-
-// Park vehicle
+// Park Vehicle
 function parkVehicle() {
-    let input = document.getElementById('vehicleNumber');
+    const input = document.getElementById('vehicleNumber');
     let vnum = normalizeVehicleNumber(input.value);
 
     if (!vnum) {
-        showMessage("Please enter vehicle number!");
+        showMessage("Please enter vehicle number.");
         return;
     }
 
     if (!isValidVehicleNumber(vnum)) {
-        showMessage("Invalid vehicle number!");
+        showMessage("Invalid vehicle number.");
         return;
     }
 
     if (parkingData.has(vnum)) {
-        showMessage("Vehicle already parked!");
+        showMessage("Vehicle already parked.");
         return;
     }
 
-    let freeSlot = findFreeSlot();
-
-    if (!freeSlot) {
-        showMessage("No slots available!");
+    if (freeSlotsQueue.length === 0) {
+        showMessage("Parking Full. No slots available.");
         return;
     }
+
+    let allocatedSlot = freeSlotsQueue.shift(); // O(1)
 
     parkingData.set(vnum, {
-        slot: freeSlot,
+        slot: allocatedSlot,
         entryTime: new Date()
     });
 
-    let slotDiv = document.getElementById('slot' + freeSlot);
+    let slotDiv = document.getElementById('slot' + allocatedSlot);
     slotDiv.classList.add('occupied');
-    slotDiv.innerText = `Slot ${freeSlot}\n${vnum}`;
+    slotDiv.innerText = `Slot ${allocatedSlot}\n${vnum}`;
 
-    showMessage(`Vehicle parked at Slot ${freeSlot}`);
-
+    showMessage(`Vehicle parked at Slot ${allocatedSlot}`);
     input.value = "";
 }
 
-// Exit vehicle
+// Exit Vehicle
 function exitVehicle() {
-    let input = document.getElementById('exitVehicleNumber');
+    const input = document.getElementById('exitVehicleNumber');
     let vnum = normalizeVehicleNumber(input.value);
 
     if (!vnum) {
-        showMessage("Please enter vehicle number!");
+        showMessage("Please enter vehicle number.");
         return;
     }
 
     if (!parkingData.has(vnum)) {
-        showMessage("Vehicle not found!");
+        showMessage("Vehicle not found.");
         return;
     }
 
-    let data = parkingData.get(vnum);
+    let vehicleData = parkingData.get(vnum);
     let exitTime = new Date();
 
-    let diffMs = exitTime - data.entryTime;
-
-    if (diffMs < 0) {
-        showMessage("Invalid time calculation!");
-        return;
-    }
-
+    let diffMs = exitTime - vehicleData.entryTime;
     let hours = Math.ceil(diffMs / (1000 * 60 * 60));
-    hours = Math.max(1, hours); // Minimum 1 hour charge
+    hours = Math.max(1, hours);  // Minimum 1 hour
 
     let fee = hours * ratePerHour;
 
-    let slotDiv = document.getElementById('slot' + data.slot);
+    let slotDiv = document.getElementById('slot' + vehicleData.slot);
     slotDiv.classList.remove('occupied');
-    slotDiv.innerText = 'Slot ' + data.slot;
+    slotDiv.innerText = 'Slot ' + vehicleData.slot;
 
+    freeSlotsQueue.push(vehicleData.slot); // Return slot to queue
     parkingData.delete(vnum);
 
     showMessage(`Vehicle exited. Duration: ${hours} hour(s). Fee: ₹${fee}`);
-
     input.value = "";
 }
 
-// Display message
-function showMessage(msg) {
-    document.getElementById('message').innerText = msg;
+// Show message
+function showMessage(message) {
+    document.getElementById('message').innerText = message;
 }
 
-// Initialize
+// Initialize system
 createSlots();
